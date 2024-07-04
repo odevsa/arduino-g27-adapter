@@ -61,9 +61,14 @@ Modify the file `modular-g27-adapter.ino` to customize your project.
 
 # Wiring
 
-![Board](assets/board.jpg "Board")
+This is just a wiring suggestion, but you can customize and change the pin definitions.
 
-[TODO]
+If you are going to use this suggestion it will just be `plug-n-play` with the current code.
+
+![Wiring](assets/wiring.svg "Wiring")
+
+Example
+![Board](assets/board.jpg "Board")
 
 # Shell
 
