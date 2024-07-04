@@ -1,17 +1,17 @@
-# Modular G27 Adapter (with Handbrake and Button Box)
+# G27 Adapter (with Handbrake and Button Box)
 
 This adapter will allow you to connect a G27 shifter and G27 pedals standalone without the need for a G27 Steering Wheel.
 
 Plus you can connect a Analog Handbrake and a Button Box of 16 Buttons.
 
-Finally it is modular, you can connect only G27 shifter, only G27 pedals, only Handbrake, or all together simply commenting lines.
+**It is modular, you can connect only G27 shifter, only G27 pedals, only Handbrake, or all together simply commenting lines.**
 
 # Features
 
 - [x] G27 Shifter
 - [x] G27 Pedals
 - [x] Custom Handbrake
-- [ ] Custom Button Box
+- [ ] Custom Button Box (ToDo)
 
 # Requirements
 
