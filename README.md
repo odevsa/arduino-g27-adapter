@@ -1,4 +1,4 @@
-# Modular G27 Adapter with Handbrake
+# Modular G27 Adapter (with Handbrake and Button Box)
 
 This adapter will allow you to connect a G27 shifter and G27 pedals standalone without the need for a G27 Steering Wheel.
 
