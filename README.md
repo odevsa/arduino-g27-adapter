@@ -17,7 +17,7 @@ Plus you can connect a Analog Handbrake and a Button Box of 16 Buttons.
 
 # Requirements
 
-- 1x Arduino Pro Micro
+- 1x Arduino Pro Micro 16mhz 5v (USB C)
 
   ![Arduino Pro Micro](assets/pro-micro.jpg "Arduino Pro Micro")
 
