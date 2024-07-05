@@ -74,4 +74,4 @@ Example
 
 # Shell
 
-[https://www.printables.com/model/933848-g27-adapter-with-handbrake](https://www.printables.com/model/933848-g27-adapter-with-handbrake){:target="\_blank"}
+https://www.printables.com/model/933848-g27-adapter-with-handbrake
