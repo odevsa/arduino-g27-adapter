@@ -1,5 +1,7 @@
 # G27 Adapter (with Handbrake and Button Box)
 
+![Cover](assets/cover.jpg "Cover")
+
 This adapter will allow you to connect a G27 shifter and G27 pedals standalone without the need for a G27 Steering Wheel.
 
 Plus you can connect a Analog Handbrake and a Button Box of 16 Buttons.
@@ -72,4 +74,4 @@ Example
 
 # Shell
 
-[TODO]
+https://www.printables.com/model/933848-g27-adapter-with-handbrake
