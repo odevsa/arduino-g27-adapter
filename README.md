@@ -8,16 +8,16 @@ Plus you can connect a Analog Handbrake and a Button Box of 16 Buttons.
 
 **It is modular, you can connect only G27 shifter, only G27 pedals, only Handbrake, or all together simply commenting lines.**
 
-# Description
-
-![Description](assets/description.jpg "Description")
-
 # Features
 
 - [x] G27 Shifter
 - [x] G27 Pedals
 - [x] Custom Handbrake
 - [ ] Custom Button Box (ToDo)
+
+# Settings
+
+![Settings](assets/settings.jpg "Settings")
 
 # Requirements
 
