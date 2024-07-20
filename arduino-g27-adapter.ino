@@ -2,6 +2,7 @@
 
 // Comment out the following lines to disable the respective input
 #define USE_SHIFTER
+#define USE_BUTTON_ARRAY
 #define USE_PEDALS
 #define USE_HANDBRAKE
 
@@ -15,6 +16,10 @@
 #define PIN_PEDALS_BRAKE 19
 #define PIN_PEDALS_CLUTCH 20
 #define PIN_HANDBRAKE 21
+#define PIN_BUTTON_ARRAY_COLS \
+  (int[4]) { 2, 3, 4, 5 }
+#define PIN_BUTTON_ARRAY_ROWS \
+  (int[4]) { 10, 14, 15, 16 }
 
 // Shifter tresholds
 #define TRESHOLD_SHIFTER_X_LEFT 350
@@ -37,14 +42,15 @@
 #define SHIFTER_INDEX_DPAD_BOTTOM 14
 #define SHIFTER_INDEX_DPAD_LEFT 13
 
-#define SIGNAL_SETTLE_DELAY 10
-
+// Joystick Report ID
 #define JOYSTICK_REPORT_ID 0x03
 
-typedef struct
+#define SIGNAL_SETTLE_DELAY 10
+
+typedef struct JoystickReport
 {
-#ifdef USE_SHIFTER
-  uint32_t shifter;
+#if defined(USE_SHIFTER) || defined(USE_BUTTON_ARRAY)
+  uint32_t buttons;
 #endif
 #ifdef USE_PEDALS
   uint16_t accelerator;
@@ -54,7 +60,7 @@ typedef struct
 #ifdef USE_HANDBRAKE
   uint16_t handbrake;
 #endif
-} JoystickReport;
+};
 
 typedef struct Axis
 {
@@ -71,8 +77,11 @@ typedef struct Axis
   }
 };
 
+int buttonArrayRowSize = sizeof(PIN_BUTTON_ARRAY_ROWS) / sizeof(PIN_BUTTON_ARRAY_ROWS[0]);
+int buttonArrayColSize = sizeof(PIN_BUTTON_ARRAY_COLS) / sizeof(PIN_BUTTON_ARRAY_COLS[0]);
+
 JoystickReport joystickReport = {
-#ifdef USE_SHIFTER
+#if defined(USE_SHIFTER) || defined(USE_BUTTON_ARRAY)
     0,
 #endif
 #ifdef USE_PEDALS
@@ -93,7 +102,23 @@ static const uint8_t _hidReportDescriptor[] PROGMEM = {
     0xa1, 0x01,               // COLLECTION (Application)
     0x85, JOYSTICK_REPORT_ID, //   REPORT_ID (3)
 
-#if defined(USE_SHIFTER)
+#if defined(USE_SHIFTER) && defined(USE_BUTTON_ARRAY)
+    // 31 Buttons (7 first is for gears, 16 last is for button array, G27 Shifter's D-Pad is disabled because HID Library is limited to only 32 buttons)
+    0x05, 0x09, //   USAGE_PAGE (Button)
+    0x19, 0x01, //      USAGE_MINIMUM (Button 1)
+    0x29, 0x1f, //      USAGE_MAXIMUM (Button 31)
+    0x15, 0x00, //      LOGICAL_MINIMUM (0)
+    0x25, 0x01, //      LOGICAL_MAXIMUM (1)
+    0x75, 0x01, //      REPORT_SIZE (1)
+    0x95, 0x1f, //      REPORT_COUNT (31)
+    0x55, 0x00, //      UNIT_EXPONENT (0)
+    0x65, 0x00, //      UNIT (None)
+    0x81, 0x02, //      INPUT (Data,Var,Abs)
+    // Padding
+    0x95, 0x01, //      REPORT_COUNT (1)
+    0x75, 0x01, //      REPORT_SIZE (1)
+    0x81, 0x03, //      INPUT (Cnst,Var,Abs)
+#elif defined(USE_SHIFTER)
     // 19 Buttons (7 first is for gears)
     0x05, 0x09, //   USAGE_PAGE (Button)
     0x19, 0x01, //      USAGE_MINIMUM (Button 1)
@@ -105,10 +130,28 @@ static const uint8_t _hidReportDescriptor[] PROGMEM = {
     0x55, 0x00, //      UNIT_EXPONENT (0)
     0x65, 0x00, //      UNIT (None)
     0x81, 0x02, //      INPUT (Data,Var,Abs)
-    0x95, 0x01, //      REPORT_COUNT (1) - para alinhar os bits restantes
+    // Padding
+    0x95, 0x01, //      REPORT_COUNT (1)
     0x75, 0x0d, //      REPORT_SIZE (13)
     0x81, 0x03, //      INPUT (Cnst,Var,Abs)
+#elif defined(USE_BUTTON_ARRAY)
+    // 16 Buttons (Button Array)
+    0x05, 0x09, //   USAGE_PAGE (Button)
+    0x19, 0x01, //      USAGE_MINIMUM (Button 1)
+    0x29, 0x10, //      USAGE_MAXIMUM (Button 16)
+    0x15, 0x00, //      LOGICAL_MINIMUM (0)
+    0x25, 0x01, //      LOGICAL_MAXIMUM (1)
+    0x75, 0x01, //      REPORT_SIZE (1)
+    0x95, 0x10, //      REPORT_COUNT (16)
+    0x55, 0x00, //      UNIT_EXPONENT (0)
+    0x65, 0x00, //      UNIT (None)
+    0x81, 0x02, //      INPUT (Data,Var,Abs)
+    // Padding
+    0x95, 0x01, //      REPORT_COUNT (1)
+    0x75, 0x10, //      REPORT_SIZE (16)
+    0x81, 0x03, //      INPUT (Cnst,Var,Abs)
 #endif
+
 #if defined(USE_PEDALS) && defined(USE_HANDBRAKE)
     // 4 Axes (Accelerator, Brake, Clutch and Handbrake)
     0x05, 0x01,       //   USAGE_PAGE (Generic Desktop)
@@ -145,12 +188,29 @@ static const uint8_t _hidReportDescriptor[] PROGMEM = {
     0xc0 // END_COLLECTION
 };
 
+#if defined(USE_SHIFTER) || defined(USE_BUTTON_ARRAY)
+uint32_t outputButtons = 0;
+int buttonCurrentIndex = 0;
+
+void pressButton(uint8_t button)
+{
+  bitSet(outputButtons, button);
+}
+void releaseButton(uint8_t button)
+{
+  bitClear(outputButtons, button);
+}
+void setButton(uint8_t button, bool pressed)
+{
+  pressed ? pressButton(button) : releaseButton(button);
+}
+#endif
+
 #ifdef USE_SHIFTER
 int shifterValueData[16];
 int shifterValueX;
 int shifterValueY;
 int shifterCurrentGear;
-uint32_t outputShifter = 0;
 
 void getButtonStates(int *buffer)
 {
@@ -170,53 +230,20 @@ void getButtonStates(int *buffer)
 
 int getCurrentGear(int x, int y, bool reverse)
 {
-
   if (reverse)
-  {
-    if (x > TRESHOLD_SHIFTER_X_RIGHT && y < TRESHOLD_SHIFTER_Y_DOWN)
-      return 7;
-    else
-      return 0;
-  }
+    return (x > TRESHOLD_SHIFTER_X_RIGHT && y < TRESHOLD_SHIFTER_Y_DOWN) ? 7 : 0;
 
   if (x < TRESHOLD_SHIFTER_X_LEFT)
-  {
-    if (y > TRESHOLD_SHIFTER_Y_UP)
-      return 1;
-    if (y < TRESHOLD_SHIFTER_Y_DOWN)
-      return 2;
-  }
+    return (y > TRESHOLD_SHIFTER_Y_UP) ? 1 : (y < TRESHOLD_SHIFTER_Y_DOWN) ? 2
+                                                                           : 0;
   else if (x > TRESHOLD_SHIFTER_X_RIGHT)
-  {
-    if (y > TRESHOLD_SHIFTER_Y_UP)
-      return 5;
-    if (y < TRESHOLD_SHIFTER_Y_DOWN)
-    {
-      return 6;
-    }
-  }
+    return (y > TRESHOLD_SHIFTER_Y_UP) ? 5 : (y < TRESHOLD_SHIFTER_Y_DOWN) ? 6
+                                                                           : 0;
   else
-  {
-    if (y > TRESHOLD_SHIFTER_Y_UP)
-      return 3;
-    if (y < TRESHOLD_SHIFTER_Y_DOWN)
-      return 4;
-  }
+    return (y > TRESHOLD_SHIFTER_Y_UP) ? 3 : (y < TRESHOLD_SHIFTER_Y_DOWN) ? 4
+                                                                           : 0;
 
   return 0;
-}
-
-void pressButton(uint8_t button)
-{
-  bitSet(outputShifter, button);
-}
-void releaseButton(uint8_t button)
-{
-  bitClear(outputShifter, button);
-}
-void setButton(uint8_t button, bool pressed)
-{
-  pressed ? pressButton(button) : releaseButton(button);
 }
 
 void loadShifter()
@@ -226,24 +253,42 @@ void loadShifter()
   shifterValueY = analogRead(PIN_SHIFTER_Y);
   shifterCurrentGear = getCurrentGear(shifterValueX, shifterValueY, shifterValueData[SHIFTER_INDEX_REVERSE] == 1);
 
-  outputShifter = 0;
   if (shifterCurrentGear > 0)
     setButton(shifterCurrentGear - 1, true);
 
-  setButton(7, shifterValueData[SHIFTER_INDEX_BLACK_TOP] == HIGH);
-  setButton(8, shifterValueData[SHIFTER_INDEX_BLACK_RIGHT] == HIGH);
-  setButton(9, shifterValueData[SHIFTER_INDEX_BLACK_BOTTOM] == HIGH);
-  setButton(10, shifterValueData[SHIFTER_INDEX_BLACK_LEFT] == HIGH);
+  buttonCurrentIndex = 7;
 
-  setButton(11, shifterValueData[SHIFTER_INDEX_DPAD_TOP] == HIGH);
-  setButton(12, shifterValueData[SHIFTER_INDEX_DPAD_RIGHT] == HIGH);
-  setButton(13, shifterValueData[SHIFTER_INDEX_DPAD_BOTTOM] == HIGH);
-  setButton(14, shifterValueData[SHIFTER_INDEX_DPAD_LEFT] == HIGH);
+  setButton(buttonCurrentIndex++, shifterValueData[SHIFTER_INDEX_BLACK_TOP] == HIGH);
+  setButton(buttonCurrentIndex++, shifterValueData[SHIFTER_INDEX_BLACK_RIGHT] == HIGH);
+  setButton(buttonCurrentIndex++, shifterValueData[SHIFTER_INDEX_BLACK_BOTTOM] == HIGH);
+  setButton(buttonCurrentIndex++, shifterValueData[SHIFTER_INDEX_BLACK_LEFT] == HIGH);
 
-  setButton(15, shifterValueData[SHIFTER_INDEX_RED_1] == HIGH);
-  setButton(16, shifterValueData[SHIFTER_INDEX_RED_2] == HIGH);
-  setButton(17, shifterValueData[SHIFTER_INDEX_RED_3] == HIGH);
-  setButton(18, shifterValueData[SHIFTER_INDEX_RED_4] == HIGH);
+#if !defined(USE_BUTTON_ARRAY)
+  setButton(buttonCurrentIndex++, shifterValueData[SHIFTER_INDEX_DPAD_TOP] == HIGH);
+  setButton(buttonCurrentIndex++, shifterValueData[SHIFTER_INDEX_DPAD_RIGHT] == HIGH);
+  setButton(buttonCurrentIndex++, shifterValueData[SHIFTER_INDEX_DPAD_BOTTOM] == HIGH);
+  setButton(buttonCurrentIndex++, shifterValueData[SHIFTER_INDEX_DPAD_LEFT] == HIGH);
+#endif
+
+  setButton(buttonCurrentIndex++, shifterValueData[SHIFTER_INDEX_RED_1] == HIGH);
+  setButton(buttonCurrentIndex++, shifterValueData[SHIFTER_INDEX_RED_2] == HIGH);
+  setButton(buttonCurrentIndex++, shifterValueData[SHIFTER_INDEX_RED_3] == HIGH);
+  setButton(buttonCurrentIndex++, shifterValueData[SHIFTER_INDEX_RED_4] == HIGH);
+}
+#endif
+
+#ifdef USE_BUTTON_ARRAY
+void loadButtonArray()
+{
+  for (int row = 0; row < buttonArrayRowSize; row++)
+  {
+    digitalWrite(PIN_BUTTON_ARRAY_ROWS[row], LOW);
+
+    for (int col = 0; col < buttonArrayColSize; col++)
+      setButton(buttonCurrentIndex++, digitalRead(PIN_BUTTON_ARRAY_COLS[col]) == LOW);
+
+    digitalWrite(PIN_BUTTON_ARRAY_ROWS[row], HIGH);
+  }
 }
 #endif
 
@@ -259,8 +304,8 @@ Axis handbrake;
 
 void sendState()
 {
-#ifdef USE_SHIFTER
-  joystickReport.shifter = outputShifter;
+#if defined(USE_SHIFTER) || defined(USE_BUTTON_ARRAY)
+  joystickReport.buttons = outputButtons;
 #endif
 #ifdef USE_PEDALS
   joystickReport.accelerator = pedalsAccelerator.output;
@@ -284,6 +329,14 @@ void setup()
   pinMode(PIN_SHIFTER_X, INPUT);
   pinMode(PIN_SHIFTER_Y, INPUT);
 
+  for (int i = 0; i < buttonArrayRowSize; i++)
+  {
+    pinMode(PIN_BUTTON_ARRAY_ROWS[i], OUTPUT);
+    digitalWrite(PIN_BUTTON_ARRAY_ROWS[i], HIGH);
+  }
+  for (int i = 0; i < buttonArrayColSize; i++)
+    pinMode(PIN_BUTTON_ARRAY_COLS[i], INPUT_PULLUP);
+
   pinMode(PIN_PEDALS_ACCELERATOR, INPUT);
   pinMode(PIN_PEDALS_BRAKE, INPUT);
   pinMode(PIN_PEDALS_CLUTCH, INPUT);
@@ -301,8 +354,15 @@ void setup()
 
 void loop()
 {
+#if defined(USE_SHIFTER) || defined(USE_BUTTON_ARRAY)
+  buttonCurrentIndex = 0;
+  outputButtons = 0;
+#endif
 #ifdef USE_SHIFTER
   loadShifter();
+#endif
+#ifdef USE_BUTTON_ARRAY
+  loadButtonArray();
 #endif
 #ifdef USE_PEDALS
   pedalsAccelerator.setValue(analogRead(PIN_PEDALS_ACCELERATOR));
