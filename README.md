@@ -13,7 +13,7 @@ Plus you can connect a Analog Handbrake and a Button Box of 16 Buttons.
 - [x] G27 Shifter
 - [x] G27 Pedals
 - [x] Custom Handbrake
-- [x] Custom Button Box (ToDo)
+- [x] Custom Button Box
 
 # Settings
 
