@@ -15,10 +15,6 @@ Plus you can connect a Analog Handbrake and a Button Box of 16 Buttons.
 - [x] Custom Handbrake
 - [x] Custom Button Box
 
-# Settings
-
-![Settings](assets/settings.jpg "Settings")
-
 # Requirements
 
 - Arduino Pro Micro 16mhz 5v (USB C)
