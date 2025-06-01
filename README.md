@@ -37,7 +37,7 @@ Plus you can connect a Analog Handbrake and a Button Box of 16 Buttons.
 
 # Dependencies
 
-You will need install in your Arduino the library bellow:
+You will need install in your Arduino the library below:
 
 - Joystick 
 
