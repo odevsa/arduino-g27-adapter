@@ -35,6 +35,12 @@ Plus you can connect a Analog Handbrake and a Button Box of 16 Buttons.
 
   **⚠️ Observation:** With this board, you don't necessarily have space limitations or need to use these buttons. You can use different types of buttons/switches as well, all you need is to solder the wires to the buttons of your choice and solder them to the button contacts on the back side of the board. Or simply you can make your own 4x4 Button Matrix, it doens't require any kind of different components, it's just a simple matrix of contact.
 
+# Dependencies
+
+You will need install in your Arduino the library bellow:
+
+- Joystick 
+
 # Getting Started
 
 Modify the file `arduino-g27-adapter.ino` to customize your project.
