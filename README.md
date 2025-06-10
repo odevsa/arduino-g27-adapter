@@ -39,7 +39,7 @@ Plus you can connect a Analog Handbrake and a Button Box of 16 Buttons.
 
 You will need install in your Arduino the library below:
 
-- Joystick 
+- joystick
 
 # Getting Started
 
